@@ -1,0 +1,5 @@
+.clasp.json
+.claspignore
+secrets/
+node_modules/
+.DS_Store
