@@ -53,6 +53,36 @@ Alternative for iterating from this repo: `clasp` (`npm i -g @google/clasp`,
 - Nothing is ever sent, deleted, or shared. Scopes are `gmail.modify` (read,
   mark read, label), `gmail.labels`, and `userinfo.email`.
 
+## Troubleshooting the first open
+
+**"Sorry, unable to open the file at this time." (a Google Drive page)**
+
+This is almost always a *multi-login account mismatch*, not a failed
+authorization. An Apps Script `/exec` URL runs under the browser profile's
+**default** Google session (authuser 0) and offers no account chooser. If the
+web app is deployed "Only myself" under account B while account A is the
+profile default, Google serves this generic Drive wall before `doGet` ever
+runs. Fixes, most reliable first:
+
+1. **Open the URL in a browser profile (or incognito window) where the
+   deploying account is the only signed-in Google account.** This is the
+   durable fix and makes the bookmark work every time.
+2. **Try the `/u/N/` URL form**, where N is the account's index in your Google
+   session list (try 1, then 2):
+   `https://script.google.com/macros/u/1/s/<DEPLOYMENT_ID>/exec`
+   Session-index hints are unreliable for `/exec` on consumer Gmail accounts -
+   treat this as a convenience, not a guarantee.
+3. `/a/macros/<domain>/s/<ID>/exec` forces the session for a **Workspace**
+   account, but does not apply to consumer Gmail.
+
+**Confirm authorization actually completed:** in the Apps Script editor while
+signed into the deploying account, pick `boot` in the function dropdown and
+Run. If consent never finished, this re-triggers it; if it returns cleanly,
+auth is fine and the problem was purely which session opened the URL.
+
+**Check you have the right URL:** it must be the web app URL ending in
+`/exec` from the Deploy dialog, not the editor URL (`/d/<SCRIPT_ID>/edit`).
+
 ## Notes and knobs
 
 - **Back issues**: the date picker fetches any calendar day as a strict

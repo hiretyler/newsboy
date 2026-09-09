@@ -64,6 +64,35 @@ provide a Proxy-based runner stub, assert on rendered HTML). `node --check`
 both `Code.gs` (it is V8-compatible JS) and the extracted client script
 before committing.
 
+## Current status (last touched 2026-09-08)
+
+Code is complete and pushed; **the app has never been confirmed running in a
+browser.** Everything below is verified only by Node smoke tests.
+
+Where it stopped: deploying the web app and opening the `/exec` URL returned
+Google's "Sorry, unable to open the file at this time" Drive page. Diagnosis
+(unconfirmed) is a multi-login session mismatch - `/exec` runs as the browser
+profile's default Google account, and the target account was not the default.
+README's "Troubleshooting the first open" section has the fix ladder.
+
+Next session should start by confirming that diagnosis: open the `/exec` URL
+in a clean profile / incognito with only the deploying account signed in. If
+the paper renders, the remaining unknowns are all runtime-behavior questions
+that no test has exercised yet:
+
+- Does the full-week first load finish inside Apps Script's 6-minute
+  execution limit on a busy inbox? (One `Messages.get` per message, no batch
+  endpoint. If not: narrow the default window, or pre-warm via a time-driven
+  trigger writing into CacheService.)
+- Does the assembled issue exceed the 100 KB `CacheService` value cap? The
+  `put` is wrapped in try/catch, so this degrades to "no caching" silently -
+  check the execution log rather than trusting the UI.
+- Do the classifier regexes hold up on a different inbox than the one they
+  were tuned against? They were written from a survey of a *different*
+  account's mail; expect to tune `NAME_MAP` and the `*_SUBJ` patterns.
+- The Motor-Cycle section has never had a real message routed to it (no moto
+  sender existed in the source inbox).
+
 ## Origin
 
 Ported from a claude.ai artifact version (private, MCP-based, read-only
